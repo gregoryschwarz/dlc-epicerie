@@ -1,0 +1,32 @@
+{
+  "name": "DLC Épicerie",
+  "short_name": "DLC Épicerie",
+  "description": "Suivi des dates limites de consommation et de la charte de retrait (J-15) pour les produits d'épicerie",
+  "start_url": "./DLC_Epicerie.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#D97706",
+  "theme_color": "#92400E",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

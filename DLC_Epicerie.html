@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DLC Épicerie">
+  <meta name="theme-color" content="#D97706">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <title>DLC Épicerie</title>
+  <style>
+    :root {
+      --ambre: #D97706;
+      --ambre-fonce: #92400E;
+      --rouge: #EF4444;
+      --rouge-clair: #FEE2E2;
+      --orange: #F97316;
+      --orange-clair: #FFF7ED;
+      --jaune: #EAB308;
+      --jaune-clair: #FEFCE8;
+      --vert: #22C55E;
+      --vert-clair: #DCFCE7;
+      --gris: #F1F5F9;
+      --gris-bord: #E2E8F0;
+      --texte: #1E293B;
+      --texte-doux: #64748B;
+      --blanc: #FFFFFF;
+      --ombre: 0 2px 12px rgba(0,0,0,0.08);
+      --rayon: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #FFFBEB;
+      color: var(--texte);
+      min-height: 100vh;
+      padding-bottom: 100px;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg, var(--ambre-fonce), var(--ambre));
+      color: white;
+      padding: 54px 20px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--ombre);
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 22px; font-weight: 700; }
+    .header h1 span { font-size: 26px; }
+    .date-auj { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+    .retrait-info { font-size: 12px; opacity: 0.8; margin-top: 3px; background: rgba(255,255,255,0.2); display: inline-block; padding: 2px 8px; border-radius: 6px; }
+    .stats-resume { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+    .btn-header { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 10px; padding: 8px 14px; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+    /* ALERTE RETRAIT */
+    .alerte-retrait {
+      margin: 16px;
+      background: var(--rouge);
+      color: white;
+      border-radius: var(--rayon);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(239,68,68,0.35);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.88} }
+    .alerte-retrait .ic { font-size: 28px; }
+    .alerte-retrait .txt strong { display: block; font-size: 15px; font-weight: 700; }
+    .alerte-retrait .txt span { font-size: 13px; opacity: 0.9; }
+    .alerte-retrait.hidden { display: none; }
+
+    /* COMPTEURS */
+    .compteurs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 0 16px;
+      margin-bottom: 16px;
+    }
+    .compteur {
+      background: white;
+      border-radius: 14px;
+      padding: 12px 8px;
+      text-align: center;
+      box-shadow: var(--ombre);
+      cursor: pointer;
+      transition: transform 0.15s;
+      border: 2px solid transparent;
+    }
+    .compteur:active { transform: scale(0.96); }
+    .compteur.actif { border-color: var(--ambre); }
+    .compteur .nb { font-size: 26px; font-weight: 800; line-height: 1; }
+    .compteur .lb { font-size: 10px; font-weight: 600; color: var(--texte-doux); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .compteur.rouge .nb { color: var(--rouge); }
+    .compteur.orange .nb { color: var(--orange); }
+    .compteur.jaune .nb { color: var(--jaune); }
+    .compteur.vert .nb { color: var(--vert); }
+
+    /* BARRE RECHERCHE */
+    .barre { padding: 0 16px 12px; display: flex; gap: 10px; }
+    .recherche {
+      flex: 1; background: white;
+      border: 1.5px solid var(--gris-bord);
+      border-radius: 12px; padding: 10px 14px;
+      font-size: 15px; color: var(--texte); outline: none;
+    }
+    .recherche:focus { border-color: var(--ambre); }
+    .select-cat {
+      background: white;
+      border: 1.5px solid var(--gris-bord);
+      border-radius: 12px;
+      padding: 10px 10px;
+      font-size: 13px;
+      color: var(--texte-doux);
+      cursor: pointer;
+      max-width: 130px;
+    }
+    .btn-tri {
+      background: white;
+      border: 1.5px solid var(--gris-bord);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: var(--texte-doux);
+      cursor: pointer;
+    }
+
+    /* LISTE PRODUITS */
+    .liste { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+
+    .produit {
+      background: white;
+      border-radius: var(--rayon);
+      padding: 14px 16px;
+      box-shadow: var(--ombre);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-left: 5px solid transparent;
+      transition: transform 0.15s;
+    }
+    .produit:active { transform: scale(0.98); }
+    .produit.rouge { border-left-color: var(--rouge); background: linear-gradient(to right, #FFF5F5, white); }
+    .produit.orange { border-left-color: var(--orange); background: linear-gradient(to right, #FFFAF5, white); }
+    .produit.jaune { border-left-color: var(--jaune); background: linear-gradient(to right, #FEFFF5, white); }
+    .produit.vert { border-left-color: var(--vert); }
+    .produit.traite { opacity: 0.5; filter: grayscale(0.5); background: var(--gris) !important; }
+    .produit.traite .produit-nom { text-decoration: line-through; }
+
+    .badge-statut {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .rouge .badge-statut { background: var(--rouge-clair); }
+    .orange .badge-statut { background: var(--orange-clair); }
+    .jaune .badge-statut { background: var(--jaune-clair); }
+    .vert .badge-statut { background: var(--vert-clair); }
+
+    .produit-info { flex: 1; min-width: 0; }
+    .produit-nom { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .produit-dlc { font-size: 13px; color: var(--texte-doux); margin-top: 2px; }
+    .produit-dlc strong { font-weight: 700; }
+    .produit-retrait { font-size: 12px; font-weight: 700; margin-top: 3px; }
+    .produit-qte { font-size: 12px; background: var(--gris); color: var(--texte-doux); border-radius: 6px; padding: 2px 8px; margin-top: 4px; display: inline-block; }
+    .produit-ean { font-size: 11px; color: var(--texte-doux); margin-top: 3px; font-family: monospace; }
+    .produit-cat { font-size: 11px; color: var(--ambre-fonce); margin-top: 3px; font-weight: 600; }
+
+    .produit-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-action { width: 36px; height: 36px; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .btn-edit { background: var(--gris); color: var(--texte-doux); }
+    .btn-del { background: var(--rouge-clair); color: var(--rouge); }
+    .btn-traite { background: var(--vert-clair); color: var(--vert); }
+    .btn-traite.actif { background: var(--vert); color: white; }
+
+    .vide { text-align: center; padding: 60px 20px; color: var(--texte-doux); }
+    .vide .ic { font-size: 56px; margin-bottom: 12px; }
+    .vide p { font-size: 15px; }
+
+    /* BOUTON AJOUTER */
+    .btn-ajouter {
+      position: fixed; bottom: 24px; right: 20px;
+      width: 62px; height: 62px;
+      background: linear-gradient(135deg, var(--ambre-fonce), var(--ambre));
+      color: white; border: none; border-radius: 50%;
+      font-size: 32px;
+      box-shadow: 0 6px 20px rgba(217,119,6,0.5);
+      cursor: pointer; z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s;
+    }
+    .btn-ajouter:active { transform: scale(0.92); }
+
+    /* MODAL */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 300;
+      display: flex; align-items: flex-end;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: white;
+      border-radius: 24px 24px 0 0;
+      padding: 8px 0 40px; width: 100%;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .overlay.open .modal { transform: translateY(0); }
+    .modal-poignee { width: 40px; height: 4px; background: var(--gris-bord); border-radius: 2px; margin: 12px auto 20px; }
+    .modal-titre { font-size: 18px; font-weight: 800; padding: 0 20px 16px; border-bottom: 1px solid var(--gris-bord); margin-bottom: 20px; }
+
+    .champ { padding: 0 20px; margin-bottom: 16px; }
+    .champ label { display: block; font-size: 12px; font-weight: 700; color: var(--texte-doux); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .champ input, .champ select {
+      width: 100%; background: var(--gris);
+      border: 1.5px solid transparent; border-radius: 12px;
+      padding: 13px 14px; font-size: 16px; color: var(--texte);
+      outline: none; -webkit-appearance: none;
+    }
+    .champ input:focus, .champ select:focus { border-color: var(--ambre); background: white; }
+
+    /* CHAMP SCAN */
+    .champ-scan { display: flex; gap: 8px; align-items: flex-start; }
+    .champ-scan input { flex: 1; }
+    .btn-scan {
+      background: linear-gradient(135deg, #92400E, #D97706);
+      color: white; border: none; border-radius: 12px;
+      padding: 13px 14px; font-size: 20px; cursor: pointer; flex-shrink: 0;
+    }
+
+    .scan-resultat {
+      margin: -8px 20px 12px; padding: 10px 14px;
+      border-radius: 10px; font-size: 13px; font-weight: 600;
+      background: var(--gris); color: var(--texte-doux); display: none;
+    }
+
+    /* APERÇU DATE RETRAIT */
+    .apercu-retrait {
+      margin: -8px 20px 12px; padding: 10px 14px;
+      border-radius: 10px; font-size: 13px; font-weight: 600;
+      background: #FFF7ED; color: #92400E; display: none;
+    }
+
+    .modal-btns { padding: 4px 20px 0; display: flex; gap: 12px; }
+    .btn-annuler { flex: 1; padding: 14px; background: var(--gris); border: none; border-radius: 14px; font-size: 15px; font-weight: 700; color: var(--texte-doux); cursor: pointer; }
+    .btn-sauver { flex: 2; padding: 14px; background: linear-gradient(135deg, var(--ambre-fonce), var(--ambre)); border: none; border-radius: 14px; font-size: 15px; font-weight: 700; color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(217,119,6,0.4); }
+
+    /* INSTALL BANNER */
+    .install-banner {
+      margin: 0 16px 16px;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      color: white; border-radius: var(--rayon);
+      padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+    }
+    .install-banner .ic { font-size: 26px; flex-shrink: 0; }
+    .install-banner .txt strong { display: block; font-size: 14px; font-weight: 700; }
+    .install-banner .txt span { font-size: 12px; opacity: 0.9; }
+    .install-banner button { margin-left: auto; flex-shrink: 0; background: white; color: #6366F1; border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .install-banner.hidden { display: none; }
+
+    .section-titre { padding: 0 16px 8px; font-size: 12px; font-weight: 700; color: var(--texte-doux); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* MENU (bottom sheet) */
+    .menu-item {
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      padding: 14px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--texte);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+    .menu-item:active { background: var(--gris); }
+    .menu-separateur { height: 1px; background: var(--gris-bord); margin: 4px 20px; }
+
+    /* HISTORIQUE */
+    .hist-liste { padding: 0 20px; max-height: 50vh; overflow-y: auto; }
+    .hist-item { padding: 10px 0; border-bottom: 1px solid var(--gris-bord); }
+    .hist-item .hist-action { font-size: 14px; font-weight: 700; }
+    .hist-item .hist-date { font-size: 12px; color: var(--texte-doux); margin-top: 2px; }
+    .hist-vide { text-align: center; padding: 40px 20px; color: var(--texte-doux); font-size: 14px; }
+
+    /* TOAST (annuler suppression) */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1E293B;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      z-index: 400;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+    }
+    .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: all; }
+    .toast button { background: var(--ambre); color: white; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+    /* RETRY (erreur réseau) */
+    .btn-retry {
+      margin-left: 8px;
+      background: rgba(0,0,0,0.1);
+      border: none;
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      color: inherit;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1><span>🛒</span> DLC Épicerie</h1>
+      <div class="date-auj" id="dateAuj"></div>
+      <div class="retrait-info">⏱ Charte de retrait : 15 jours avant DLC</div>
+      <div class="stats-resume" id="statsResume"></div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn-header" onclick="envoyerVersSheets()" id="btnSheets">📊 Sheets</button>
+      <button class="btn-header" onclick="importerDepuisSheets()" id="btnImport">📥 Importer</button>
+      <button class="btn-header" onclick="ouvrirMenu()">⋯</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATUT SYNC SHEETS -->
+<div class="scan-resultat" id="syncStatut" style="margin:0 16px 16px; display:none;"></div>
+
+<!-- BANNIÈRE INSTALLATION -->
+<div class="install-banner hidden" id="installBanner">
+  <div class="ic">📲</div>
+  <div class="txt">
+    <strong>Installer sur l'écran d'accueil</strong>
+    <span>Safari → Partager → Sur l'écran d'accueil</span>
+  </div>
+  <button onclick="fermerInstall()">✕</button>
+</div>
+
+<!-- ALERTE RETRAIT -->
+<div class="alerte-retrait hidden" id="alerteRetrait">
+  <div class="ic">🚨</div>
+  <div class="txt">
+    <strong id="alerteRetraitTitre"></strong>
+    <span id="alerteRetraitDetail"></span>
+  </div>
+</div>
+
+<!-- COMPTEURS -->
+<div class="compteurs">
+  <div class="compteur rouge" onclick="filtrer('rouge')" id="cptRouge">
+    <div class="nb" id="nbRouge">0</div>
+    <div class="lb">À retirer</div>
+  </div>
+  <div class="compteur orange" onclick="filtrer('orange')" id="cptOrange">
+    <div class="nb" id="nbOrange">0</div>
+    <div class="lb">Bientôt</div>
+  </div>
+  <div class="compteur jaune" onclick="filtrer('jaune')" id="cptJaune">
+    <div class="nb" id="nbJaune">0</div>
+    <div class="lb">Attention</div>
+  </div>
+  <div class="compteur vert" onclick="filtrer('vert')" id="cptVert">
+    <div class="nb" id="nbVert">0</div>
+    <div class="lb">OK</div>
+  </div>
+</div>
+
+<!-- BARRE RECHERCHE -->
+<div class="barre">
+  <input class="recherche" type="search" placeholder="🔍 Rechercher un produit..." id="inputRecherche" oninput="rendreListe()">
+  <select class="select-cat" id="selectCategorie" onchange="rendreListe()">
+    <option value="">Toutes catégories</option>
+  </select>
+  <button class="btn-tri" onclick="changerTri()" id="btnTri">DLC ↑</button>
+</div>
+
+<!-- SECTION TITRE -->
+<div class="section-titre" id="sectionTitre">Tous les produits</div>
+
+<!-- LISTE -->
+<div class="liste" id="liste"></div>
+
+<!-- BOUTON AJOUTER -->
+<button class="btn-ajouter" onclick="ouvrirModal()">+</button>
+
+<!-- INPUT CAMÉRA -->
+<input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none" onchange="traiterPhoto(this)">
+<div id="tempReader" style="display:none"></div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="fermerSiDehors(event)">
+  <div class="modal">
+    <div class="modal-poignee"></div>
+    <div class="modal-titre" id="modalTitre">Ajouter un produit</div>
+
+    <div class="champ">
+      <label>Code-barres (Gencod)</label>
+      <div class="champ-scan">
+        <input type="number" id="inputEan" placeholder="Ex : 3017620422003" oninput="rechercherParEan()" autocomplete="off">
+        <button class="btn-scan" onclick="lancerScanner()" title="Scanner">📷</button>
+      </div>
+    </div>
+    <div class="scan-resultat" id="scanResultat"></div>
+
+    <div class="champ">
+      <label>Nom du produit</label>
+      <input type="text" id="inputNom" placeholder="Ex : Pâtes penne 500g" autocomplete="off">
+    </div>
+
+    <div class="champ">
+      <label>Date limite de consommation (DLC)</label>
+      <input type="date" id="inputDlc" oninput="afficherAperçuRetrait()">
+    </div>
+    <div class="apercu-retrait" id="apercuRetrait"></div>
+
+    <div class="champ">
+      <label>Quantité en stock</label>
+      <input type="number" id="inputQte" placeholder="Ex : 48" min="0">
+    </div>
+
+    <div class="champ">
+      <label>Catégorie</label>
+      <select id="inputCategorie">
+        <option value="">— Non catégorisé —</option>
+        <option value="Conserves">🥫 Conserves</option>
+        <option value="Boissons">🥤 Boissons</option>
+        <option value="Épicerie sucrée">🍫 Épicerie sucrée</option>
+        <option value="Épicerie salée">🍝 Épicerie salée</option>
+        <option value="Hygiène / Entretien">🧴 Hygiène / Entretien</option>
+        <option value="Bébé">👶 Bébé</option>
+        <option value="Autre">📦 Autre</option>
+      </select>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn-annuler" onclick="fermerModal()">Annuler</button>
+      <button class="btn-sauver" onclick="sauvegarder()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MENU (⋯) -->
+<div class="overlay" id="overlayMenu" onclick="fermerSiDehorsMenu(event)">
+  <div class="modal">
+    <div class="modal-poignee"></div>
+    <div class="modal-titre">Options</div>
+    <button class="menu-item" onclick="fermerMenu(); exporterDonnees();">📤 Exporter en CSV</button>
+    <button class="menu-item" onclick="fermerMenu(); genererRapportPDF();">🧾 Rapport PDF</button>
+    <button class="menu-item" onclick="fermerMenu(); ouvrirHistorique();">🕒 Historique des actions</button>
+    <div class="menu-separateur"></div>
+    <button class="menu-item" onclick="fermerMenu(); demanderUrlSheets();">⚙️ Configurer Google Sheets</button>
+  </div>
+</div>
+
+<!-- HISTORIQUE -->
+<div class="overlay" id="overlayHistorique" onclick="fermerSiDehorsHistorique(event)">
+  <div class="modal">
+    <div class="modal-poignee"></div>
+    <div class="modal-titre">🕒 Historique des actions</div>
+    <div class="hist-liste" id="histListe"></div>
+    <div class="modal-btns">
+      <button class="btn-annuler" onclick="fermerHistorique()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toastTexte"></span>
+  <button id="toastBtn" onclick="actionToast()"></button>
+</div>
+
+<script>
+  const JOURS_RETRAIT = 15; // Charte de retrait épicerie
+
+  // ── DONNÉES ──────────────────────────────────────────────────────────
+  let produits = JSON.parse(localStorage.getItem('dlc_epicerie') || '[]');
+  let filtreActif = 'tous';
+  let editIndex = -1;
+  let historique = JSON.parse(localStorage.getItem('dlc_epicerie_historique') || '[]');
+  let triActif = 'dlc';
+  let triSens = 1; // 1 = croissant, -1 = décroissant
+  let categorieActive = '';
+  let dernierSupprime = null; // { item, idx } pour l'annulation
+  let toastTimer = null;
+
+  const CATEGORIES = {
+    'Conserves': '🥫', 'Boissons': '🥤', 'Épicerie sucrée': '🍫',
+    'Épicerie salée': '🍝', 'Hygiène / Entretien': '🧴', 'Bébé': '👶', 'Autre': '📦'
+  };
+
+  // ── INIT ─────────────────────────────────────────────────────────────
+  function init() {
+    const auj = new Date();
+    const opts = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+    document.getElementById('dateAuj').textContent = auj.toLocaleDateString('fr-FR', opts);
+
+    const estIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const estInstalle = window.navigator.standalone;
+    if (estIOS && !estInstalle) document.getElementById('installBanner').classList.remove('hidden');
+
+    const sel = document.getElementById('selectCategorie');
+    Object.keys(CATEGORIES).forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = CATEGORIES[c] + ' ' + c;
+      sel.appendChild(opt);
+    });
+
+    rendreListe();
+  }
+
+  // ── STATUT AVEC CHARTE DE RETRAIT 15J ────────────────────────────────
+  function getStatut(dlcStr) {
+    const auj = new Date(); auj.setHours(0,0,0,0);
+    const dlc = new Date(dlcStr + 'T00:00:00');
+    const jours = Math.round((dlc - auj) / 86400000);
+    if (jours < JOURS_RETRAIT)  return 'rouge';   // À retirer du rayon maintenant
+    if (jours < JOURS_RETRAIT * 2) return 'orange'; // Retrait dans moins de 15 jours
+    if (jours < 60)              return 'jaune';   // Attention
+    return 'vert';
+  }
+
+  function getEmoji(statut) {
+    return { rouge: '🚨', orange: '⚠️', jaune: '⏳', vert: '✅' }[statut];
+  }
+
+  function getDateRetrait(dlcStr) {
+    const dlc = new Date(dlcStr + 'T00:00:00');
+    dlc.setDate(dlc.getDate() - JOURS_RETRAIT);
+    return dlc;
+  }
+
+  function getMessageStatut(dlcStr) {
+    const auj = new Date(); auj.setHours(0,0,0,0);
+    const dlc = new Date(dlcStr + 'T00:00:00');
+    const jours = Math.round((dlc - auj) / 86400000);
+    const retrait = getDateRetrait(dlcStr);
+    const joursRetrait = Math.round((retrait - auj) / 86400000);
+
+    if (jours < 0) return `DLC dépassée il y a ${Math.abs(jours)} jour${Math.abs(jours) > 1 ? 's' : ''}`;
+    if (jours < JOURS_RETRAIT) {
+      if (joursRetrait < 0) return `Retrait dépassé il y a ${Math.abs(joursRetrait)} jour${Math.abs(joursRetrait) > 1 ? 's' : ''} !`;
+      if (joursRetrait === 0) return 'Retrait aujourd\'hui !';
+      return `Retrait dans ${joursRetrait} jour${joursRetrait > 1 ? 's' : ''} !`;
+    }
+    if (jours < JOURS_RETRAIT * 2) return `Retrait le ${retrait.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long' })}`;
+    return `${jours} jours avant DLC`;
+  }
+
+  function formatDate(dlcStr) {
+    return new Date(dlcStr + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  }
+
+  // ── RENDU LISTE ──────────────────────────────────────────────────────
+  function rendreListe() {
+    sauverDonnees();
+
+    const comparateurs = {
+      dlc:  (a, b) => a.dlc.localeCompare(b.dlc),
+      nom:  (a, b) => a.nom.localeCompare(b.nom, 'fr'),
+      qte:  (a, b) => a.qte - b.qte
+    };
+    const sorted = [...produits]
+      .map((p, i) => ({ ...p, _idx: i, _statut: getStatut(p.dlc) }))
+      .sort((a, b) => triSens * comparateurs[triActif](a, b));
+
+    const labelsTri = { dlc: 'DLC', nom: 'Nom', qte: 'Qté' };
+    document.getElementById('btnTri').textContent = labelsTri[triActif] + (triSens === 1 ? ' ↑' : ' ↓');
+
+    const nb = { rouge: 0, orange: 0, jaune: 0, vert: 0 };
+    sorted.forEach(p => nb[p._statut]++);
+    document.getElementById('nbRouge').textContent = nb.rouge;
+    document.getElementById('nbOrange').textContent = nb.orange;
+    document.getElementById('nbJaune').textContent = nb.jaune;
+    document.getElementById('nbVert').textContent = nb.vert;
+
+    const nbTraites = produits.filter(p => p.traite).length;
+    document.getElementById('statsResume').textContent =
+      `${produits.length} produit${produits.length > 1 ? 's' : ''} au total · ${nbTraites} traité${nbTraites > 1 ? 's' : ''}`;
+
+    // Alerte retrait
+    const alerte = document.getElementById('alerteRetrait');
+    if (nb.rouge > 0) {
+      alerte.classList.remove('hidden');
+      document.getElementById('alerteRetraitTitre').textContent =
+        `${nb.rouge} produit${nb.rouge > 1 ? 's' : ''} à retirer du rayon !`;
+      document.getElementById('alerteRetraitDetail').textContent =
+        'Date de retrait (J-15) dépassée — retirez-les immédiatement.';
+    } else if (nb.orange > 0) {
+      alerte.classList.remove('hidden');
+      document.getElementById('alerteRetraitTitre').textContent =
+        `${nb.orange} produit${nb.orange > 1 ? 's' : ''} bientôt à retirer`;
+      document.getElementById('alerteRetraitDetail').textContent =
+        'Date de retrait dans moins de 15 jours — anticipez.';
+    } else {
+      alerte.classList.add('hidden');
+    }
+
+    const recherche = document.getElementById('inputRecherche').value.toLowerCase();
+    categorieActive = document.getElementById('selectCategorie').value;
+    let affichage = sorted.filter(p => {
+      const matchFil = filtreActif === 'tous' || p._statut === filtreActif;
+      const matchCat = !categorieActive || p.cat === categorieActive;
+      const matchRech = !recherche || p.nom.toLowerCase().includes(recherche) || (p.ean && p.ean.includes(recherche));
+      return matchFil && matchCat && matchRech;
+    });
+
+    ['rouge','orange','jaune','vert'].forEach(s => {
+      document.getElementById('cpt' + s.charAt(0).toUpperCase() + s.slice(1))
+        .classList.toggle('actif', filtreActif === s);
+    });
+
+    const titres = { tous: 'Tous les produits', rouge: '🚨 À retirer du rayon', orange: '⚠️ Retrait bientôt', jaune: '⏳ Attention', vert: '✅ Produits OK' };
+    document.getElementById('sectionTitre').textContent = titres[filtreActif] + (recherche ? ` — "${recherche}"` : '');
+
+    const liste = document.getElementById('liste');
+    if (affichage.length === 0) {
+      liste.innerHTML = `<div class="vide"><div class="ic">${produits.length === 0 ? '🛒' : '🔍'}</div><p>${produits.length === 0 ? 'Aucun produit enregistré.<br>Appuyez sur <strong>+</strong> pour commencer.' : 'Aucun produit dans cette catégorie.'}</p></div>`;
+      return;
+    }
+
+    liste.innerHTML = affichage.map(p => {
+      const couleurMsg = { rouge: 'var(--rouge)', orange: 'var(--orange)', jaune: 'var(--jaune)', vert: 'var(--vert)' }[p._statut];
+      const retrait = getDateRetrait(p.dlc);
+      return `
+      <div class="produit ${p._statut} ${p.traite ? 'traite' : ''}">
+        <div class="badge-statut">${getEmoji(p._statut)}</div>
+        <div class="produit-info">
+          <div class="produit-nom">${echapper(p.nom)}</div>
+          <div class="produit-dlc">DLC : <strong>${formatDate(p.dlc)}</strong></div>
+          <div class="produit-retrait" style="color:${couleurMsg}">${getMessageStatut(p.dlc)}</div>
+          <div class="produit-dlc" style="color:var(--texte-doux)">📅 Retrait : ${retrait.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+          <div class="produit-qte">📦 ${p.qte} unité${p.qte > 1 ? 's' : ''}</div>
+          ${p.cat ? `<div class="produit-cat">${CATEGORIES[p.cat] || '📦'} ${echapper(p.cat)}</div>` : ''}
+          ${p.ean ? `<div class="produit-ean">🔖 ${p.ean}</div>` : ''}
+          ${p.traite ? `<div class="produit-ean">✅ Traité</div>` : ''}
+        </div>
+        <div class="produit-actions">
+          <button class="btn-action btn-traite ${p.traite ? 'actif' : ''}" onclick="basculerTraite(${p._idx})" title="${p.traite ? 'Annuler' : 'Marquer comme traité'}">✅</button>
+          <button class="btn-action btn-edit" onclick="editer(${p._idx})">✏️</button>
+          <button class="btn-action btn-del" onclick="supprimer(${p._idx})">🗑</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function echapper(str) {
+    const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
+  }
+
+  function filtrer(statut) {
+    filtreActif = filtreActif === statut ? 'tous' : statut;
+    rendreListe();
+  }
+
+  // ── TRI ──────────────────────────────────────────────────────────────
+  const SEQUENCE_TRI = [['dlc',1],['dlc',-1],['nom',1],['nom',-1],['qte',1],['qte',-1]];
+  function changerTri() {
+    let i = SEQUENCE_TRI.findIndex(([f, s]) => f === triActif && s === triSens);
+    i = (i + 1) % SEQUENCE_TRI.length;
+    [triActif, triSens] = SEQUENCE_TRI[i];
+    rendreListe();
+  }
+
+  // ── APERÇU DATE RETRAIT ──────────────────────────────────────────────
+  function afficherAperçuRetrait() {
+    const dlc = document.getElementById('inputDlc').value;
+    const el = document.getElementById('apercuRetrait');
+    if (!dlc) { el.style.display = 'none'; return; }
+    const retrait = getDateRetrait(dlc);
+    el.style.display = 'block';
+    el.textContent = `📅 Date de retrait (J-15) : ${retrait.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
+  }
+
+  // ── MODAL ────────────────────────────────────────────────────────────
+  function ouvrirModal(idx = -1) {
+    editIndex = idx;
+    document.getElementById('modalTitre').textContent = idx === -1 ? 'Ajouter un produit' : 'Modifier le produit';
+    if (idx >= 0) {
+      const p = produits[idx];
+      document.getElementById('inputEan').value = p.ean || '';
+      document.getElementById('inputNom').value = p.nom;
+      document.getElementById('inputDlc').value = p.dlc;
+      document.getElementById('inputQte').value = p.qte;
+      document.getElementById('inputCategorie').value = p.cat || '';
+      afficherAperçuRetrait();
+    } else {
+      document.getElementById('inputEan').value = '';
+      document.getElementById('inputNom').value = '';
+      document.getElementById('inputDlc').value = '';
+      document.getElementById('inputQte').value = '';
+      document.getElementById('inputCategorie').value = '';
+      document.getElementById('apercuRetrait').style.display = 'none';
+    }
+    document.getElementById('scanResultat').style.display = 'none';
+    document.getElementById('overlay').classList.add('open');
+    setTimeout(() => document.getElementById('inputNom').focus(), 400);
+  }
+
+  function fermerModal() {
+    document.getElementById('overlay').classList.remove('open');
+    editIndex = -1;
+  }
+
+  function fermerSiDehors(e) {
+    if (e.target === document.getElementById('overlay')) fermerModal();
+  }
+
+  function sauvegarder() {
+    const ean = document.getElementById('inputEan').value.trim();
+    const nom = document.getElementById('inputNom').value.trim();
+    const dlc = document.getElementById('inputDlc').value;
+    const qte = parseInt(document.getElementById('inputQte').value) || 0;
+    const cat = document.getElementById('inputCategorie').value;
+    if (!nom) { alert('Veuillez saisir un nom de produit.'); return; }
+    if (!dlc) { alert('Veuillez saisir une date de péremption.'); return; }
+    if (editIndex >= 0) {
+      produits[editIndex] = { ...produits[editIndex], ean, nom, dlc, qte, cat };
+      ajouterHistorique('Modifié', nom);
+    } else {
+      produits.push({ ean, nom, dlc, qte, cat, traite: false });
+      ajouterHistorique('Ajouté', nom);
+    }
+    fermerModal();
+    rendreListe();
+  }
+
+  // ── ACTIONS ──────────────────────────────────────────────────────────
+  function editer(idx) { ouvrirModal(idx); }
+
+  function supprimer(idx) {
+    const item = produits[idx];
+    if (!confirm(`Supprimer "${item.nom}" ?`)) return;
+
+    produits.splice(idx, 1);
+    ajouterHistorique('Supprimé', item.nom);
+    rendreListe();
+
+    dernierSupprime = { item, idx };
+    afficherToast(`"${item.nom}" supprimé.`, 'Annuler', () => {
+      if (!dernierSupprime) return;
+      produits.splice(dernierSupprime.idx, 0, dernierSupprime.item);
+      ajouterHistorique('Suppression annulée', dernierSupprime.item.nom);
+      dernierSupprime = null;
+      rendreListe();
+    });
+  }
+
+  function basculerTraite(idx) {
+    produits[idx].traite = !produits[idx].traite;
+    ajouterHistorique(produits[idx].traite ? 'Marqué traité' : 'Annulé (traité)', produits[idx].nom);
+    rendreListe();
+  }
+
+  function sauverDonnees() {
+    localStorage.setItem('dlc_epicerie', JSON.stringify(produits));
+  }
+
+  // ── HISTORIQUE ───────────────────────────────────────────────────────
+  function ajouterHistorique(action, nom, detail = '') {
+    historique.unshift({ date: new Date().toISOString(), action, nom, detail });
+    if (historique.length > 200) historique = historique.slice(0, 200);
+    localStorage.setItem('dlc_epicerie_historique', JSON.stringify(historique));
+  }
+
+  function ouvrirHistorique() {
+    rendreHistorique();
+    document.getElementById('overlayHistorique').classList.add('open');
+  }
+  function fermerHistorique() {
+    document.getElementById('overlayHistorique').classList.remove('open');
+  }
+  function fermerSiDehorsHistorique(e) {
+    if (e.target === document.getElementById('overlayHistorique')) fermerHistorique();
+  }
+  function rendreHistorique() {
+    const el = document.getElementById('histListe');
+    if (historique.length === 0) {
+      el.innerHTML = `<div class="hist-vide">Aucune action enregistrée pour l'instant.</div>`;
+      return;
+    }
+    el.innerHTML = historique.map(h => {
+      const d = new Date(h.date);
+      const dateStr = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+        ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      return `
+        <div class="hist-item">
+          <div class="hist-action">${echapper(h.action)} — ${echapper(h.nom)}</div>
+          <div class="hist-date">${dateStr}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── TOAST (annulation) ───────────────────────────────────────────────
+  function afficherToast(texte, libelleBtn, callback) {
+    clearTimeout(toastTimer);
+    const toast = document.getElementById('toast');
+    document.getElementById('toastTexte').textContent = texte;
+    const btn = document.getElementById('toastBtn');
+    btn.textContent = libelleBtn;
+    window._toastCallback = callback;
+    toast.classList.add('visible');
+    toastTimer = setTimeout(() => {
+      toast.classList.remove('visible');
+      dernierSupprime = null;
+    }, 6000);
+  }
+  function actionToast() {
+    clearTimeout(toastTimer);
+    document.getElementById('toast').classList.remove('visible');
+    if (window._toastCallback) window._toastCallback();
+  }
+
+  // ── MENU (⋯) ─────────────────────────────────────────────────────────
+  function ouvrirMenu() { document.getElementById('overlayMenu').classList.add('open'); }
+  function fermerMenu() { document.getElementById('overlayMenu').classList.remove('open'); }
+  function fermerSiDehorsMenu(e) {
+    if (e.target === document.getElementById('overlayMenu')) fermerMenu();
+  }
+
+  // ── EXPORT CSV ───────────────────────────────────────────────────────
+  function exporterDonnees() {
+    const sorted = [...produits]
+      .map(p => ({ ...p, statut: getStatut(p.dlc), retrait: getDateRetrait(p.dlc).toISOString().slice(0,10) }))
+      .sort((a,b) => a.dlc.localeCompare(b.dlc));
+    const lignes = ['Gencod,Nom du produit,DLC,Date retrait (J-15),Quantité,Statut,Traité,Catégorie'];
+    sorted.forEach(p => {
+      const statuts = { rouge: 'À retirer', orange: 'Bientôt', jaune: 'Attention', vert: 'OK' };
+      lignes.push(`${p.ean||''},"${p.nom}",${p.dlc},${p.retrait},${p.qte},${statuts[p.statut]},${p.traite ? 'Oui' : 'Non'},"${p.cat || ''}"`);
+    });
+    const blob = new Blob([lignes.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url;
+    a.download = `DLC_Epicerie_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+
+  function fermerInstall() { document.getElementById('installBanner').classList.add('hidden'); }
+
+  // ── RAPPORT PDF ──────────────────────────────────────────────────────
+  async function genererRapportPDF() {
+    const statutEl = document.getElementById('syncStatut');
+    statutEl.style.display = 'block';
+    statutEl.style.background = '#EFF6FF';
+    statutEl.style.color = '#1D4ED8';
+    statutEl.textContent = '⏳ Génération du rapport PDF…';
+
+    try {
+      await chargerScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    } catch (e) {
+      statutEl.style.background = '#FEE2E2';
+      statutEl.style.color = '#991B1B';
+      statutEl.textContent = '📡 Hors ligne — impossible de générer le PDF sans connexion.';
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const margeG = 14;
+    let y = 18;
+
+    const aRetirer = produits.filter(p => !p.traite && getStatut(p.dlc) === 'rouge')
+      .sort((a, b) => a.dlc.localeCompare(b.dlc));
+    const aSurveiller = produits.filter(p => !p.traite && (getStatut(p.dlc) === 'orange' || getStatut(p.dlc) === 'jaune'))
+      .sort((a, b) => a.dlc.localeCompare(b.dlc));
+
+    doc.setFontSize(16);
+    doc.text('Rapport DLC Épicerie', margeG, y); y += 7;
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text('Généré le ' + new Date().toLocaleString('fr-FR'), margeG, y); y += 10;
+    doc.setTextColor(0);
+
+    function nouvellePageSiBesoin() {
+      if (y > 280) { doc.addPage(); y = 18; }
+    }
+
+    function section(titre, liste, couleur) {
+      doc.setFontSize(13);
+      doc.setTextColor(couleur[0], couleur[1], couleur[2]);
+      doc.text(`${titre} (${liste.length})`, margeG, y); y += 7;
+      doc.setTextColor(0);
+      doc.setFontSize(10);
+      if (liste.length === 0) {
+        doc.setTextColor(120);
+        doc.text('Aucun produit.', margeG, y); y += 6;
+        doc.setTextColor(0);
+      } else {
+        liste.forEach(p => {
+          nouvellePageSiBesoin();
+          const ligne = `${p.nom}  —  qte ${p.qte}  —  DLC ${formatDate(p.dlc)}  —  ${getMessageStatut(p.dlc)}${p.cat ? '  —  ' + p.cat : ''}`;
+          doc.text(ligne, margeG, y);
+          y += 6;
+        });
+      }
+      y += 6;
+      nouvellePageSiBesoin();
+    }
+
+    section('A retirer du rayon', aRetirer, [220, 38, 38]);
+    section('A surveiller (bientot / attention)', aSurveiller, [234, 88, 12]);
+
+    doc.save(`Rapport_DLC_Epicerie_${new Date().toISOString().slice(0,10)}.pdf`);
+
+    statutEl.style.background = '#DCFCE7';
+    statutEl.style.color = '#166534';
+    statutEl.textContent = '✅ Rapport PDF généré.';
+  }
+
+  // ── ENVOI VERS GOOGLE SHEETS ─────────────────────────────────────────
+  function getUrlSheets() {
+    return localStorage.getItem('dlc_epicerie_url_sheets') || '';
+  }
+
+  function demanderUrlSheets() {
+    const actuelle = getUrlSheets();
+    const url = prompt('Colle ici l\'URL de ton Apps Script déployé (se termine par /exec) :', actuelle);
+    if (url === null) return null;
+    const propre = url.trim();
+    if (propre) localStorage.setItem('dlc_epicerie_url_sheets', propre);
+    return propre;
+  }
+
+  async function envoyerVersSheets() {
+    let url = getUrlSheets();
+    if (!url) {
+      url = demanderUrlSheets();
+      if (!url) return;
+    }
+
+    const statutEl = document.getElementById('syncStatut');
+    statutEl.style.display = 'block';
+    statutEl.style.background = '#EFF6FF';
+    statutEl.style.color = '#1D4ED8';
+    statutEl.textContent = '⏳ Envoi vers Google Sheets…';
+
+    const labels = { rouge: 'À retirer', orange: 'Bientôt', jaune: 'Attention', vert: 'OK' };
+    const payload = {
+      produits: produits.map(p => ({
+        ean: p.ean || '',
+        nom: p.nom,
+        dlc: p.dlc,
+        qte: p.qte,
+        statut: getStatut(p.dlc),
+        statutLabel: labels[getStatut(p.dlc)],
+        joursRestants: getMessageStatut(p.dlc),
+        traite: !!p.traite,
+        cat: p.cat || ''
+      }))
+    };
+
+    try {
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        statutEl.style.background = '#DCFCE7';
+        statutEl.style.color = '#166534';
+        statutEl.textContent = `✅ ${data.count} produit${data.count > 1 ? 's' : ''} envoyé${data.count > 1 ? 's' : ''} vers Google Sheets.`;
+      } else {
+        throw new Error(data.error || 'Erreur inconnue');
+      }
+    } catch (e) {
+      statutEl.style.background = '#FEE2E2';
+      statutEl.style.color = '#991B1B';
+      statutEl.innerHTML = '❌ Échec de l\'envoi — vérifie l\'URL du script (appui long sur 📊 Sheets pour la modifier).' +
+        '<button class="btn-retry" onclick="envoyerVersSheets()">↻ Réessayer</button>';
+    }
+  }
+
+  // ── IMPORT DEPUIS GOOGLE SHEETS ──────────────────────────────────────
+  async function importerDepuisSheets() {
+    let url = getUrlSheets();
+    if (!url) {
+      url = demanderUrlSheets();
+      if (!url) return;
+    }
+
+    const statutEl = document.getElementById('syncStatut');
+    statutEl.style.display = 'block';
+    statutEl.style.background = '#EFF6FF';
+    statutEl.style.color = '#1D4ED8';
+    statutEl.textContent = '⏳ Récupération depuis Google Sheets…';
+
+    try {
+      const resp = await fetch(url, { method: 'GET' });
+      const data = await resp.json();
+      if (!data.ok) throw new Error(data.error || 'Erreur inconnue');
+
+      const distants = data.produits || [];
+      if (distants.length === 0) {
+        statutEl.style.background = '#FEF3C7';
+        statutEl.style.color = '#92400E';
+        statutEl.textContent = 'ℹ️ Aucun produit trouvé dans le Google Sheet.';
+        return;
+      }
+
+      const remplacer = confirm(
+        `${distants.length} produit${distants.length > 1 ? 's' : ''} trouvé${distants.length > 1 ? 's' : ''} dans Google Sheets.\n\n` +
+        `Remplacer la liste actuelle de cet appareil par celle de Sheets ?`
+      );
+      if (!remplacer) {
+        statutEl.style.display = 'none';
+        return;
+      }
+
+      produits = distants.map(p => ({ ean: p.ean || '', nom: p.nom, dlc: p.dlc, qte: p.qte, traite: !!p.traite, cat: p.cat || '' }));
+      sauverDonnees();
+      rendreListe();
+
+      statutEl.style.background = '#DCFCE7';
+      statutEl.style.color = '#166534';
+      statutEl.textContent = `✅ ${produits.length} produit${produits.length > 1 ? 's' : ''} importé${produits.length > 1 ? 's' : ''} depuis Google Sheets.`;
+    } catch (e) {
+      statutEl.style.background = '#FEE2E2';
+      statutEl.style.color = '#991B1B';
+      statutEl.innerHTML = '❌ Échec de l\'import — vérifie l\'URL du script (appui long sur 📊 Sheets pour la modifier).' +
+        '<button class="btn-retry" onclick="importerDepuisSheets()">↻ Réessayer</button>';
+    }
+  }
+
+  // Appui long sur le bouton Sheets pour reconfigurer l'URL
+  (function initBoutonSheets() {
+    const btn = document.getElementById('btnSheets');
+    if (!btn) return;
+    let timer = null;
+    let declenche = false;
+    const lancerLong = () => { declenche = false; timer = setTimeout(() => { declenche = true; demanderUrlSheets(); }, 600); };
+    const annulerLong = () => { clearTimeout(timer); };
+    btn.addEventListener('mousedown', lancerLong);
+    btn.addEventListener('touchstart', lancerLong);
+    ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev => btn.addEventListener(ev, annulerLong));
+    btn.addEventListener('click', (e) => { if (declenche) e.stopImmediatePropagation(); });
+  })();
+
+  // ── SCANNER GENCOD ───────────────────────────────────────────────────
+  function chargerScript(url) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${url}"]`)) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = url; s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  function lancerScanner() {
+    document.getElementById('cameraInput').value = '';
+    document.getElementById('cameraInput').click();
+  }
+
+  async function traiterPhoto(input) {
+    if (!input.files || !input.files[0]) return;
+    const el = document.getElementById('scanResultat');
+    el.style.display = 'block'; el.style.background = '#EFF6FF'; el.style.color = '#1D4ED8';
+    el.textContent = '⏳ Analyse du code-barres…';
+    try {
+      await chargerScript('https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js');
+    } catch(e) {
+      el.style.background = '#FEE2E2'; el.style.color = '#991B1B';
+      el.textContent = '📡 Hors ligne — saisissez le code manuellement.';
+      document.getElementById('inputEan').focus(); return;
+    }
+    const imgSrc = await redimensionnerImage(input.files[0], 1200);
+    Quagga.decodeSingle({
+      decoder: { readers: ['ean_reader','ean_8_reader','code_128_reader','upc_reader','upc_e_reader'] },
+      locate: true, numOfWorkers: 0, inputStream: { size: 1200 }, src: imgSrc
+    }, function(result) {
+      if (result && result.codeResult && result.codeResult.code) {
+        el.style.display = 'none';
+        traiterCode(result.codeResult.code);
+      } else {
+        el.style.background = '#FFF7ED'; el.style.color = '#92400E';
+        el.textContent = '⚠️ Non détecté — code centré, bien éclairé, à plat.';
+      }
+    });
+  }
+
+  function redimensionnerImage(file, maxW) {
+    return new Promise((resolve) => {
+      const img = new Image(); const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale; canvas.height = img.height * scale;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url); resolve(canvas.toDataURL('image/jpeg', 0.9));
+      };
+      img.src = url;
+    });
+  }
+
+  async function traiterCode(ean) {
+    document.getElementById('inputEan').value = ean;
+    const el = document.getElementById('scanResultat');
+    el.style.display = 'block'; el.style.background = '#EFF6FF'; el.style.color = '#1D4ED8';
+    el.textContent = '🔍 Recherche du produit…';
+    try {
+      const resp = await fetch(`https://world.openfoodfacts.org/api/v0/product/${ean}.json`, { signal: AbortSignal.timeout(5000) });
+      const data = await resp.json();
+      if (data.status === 1 && data.product) {
+        const nom = data.product.product_name_fr || data.product.product_name || '';
+        if (nom) {
+          document.getElementById('inputNom').value = nom;
+          el.style.background = '#DCFCE7'; el.style.color = '#166534';
+          el.textContent = `✅ Produit trouvé : ${nom}`;
+        } else {
+          el.style.background = '#FFF7ED'; el.style.color = '#92400E';
+          el.textContent = '⚠️ Code trouvé, nom inconnu — saisissez le nom.';
+          document.getElementById('inputNom').focus();
+        }
+      } else {
+        el.style.background = '#FFF7ED'; el.style.color = '#92400E';
+        el.textContent = '⚠️ Produit non trouvé — saisissez le nom manuellement.';
+        document.getElementById('inputNom').focus();
+      }
+    } catch(e) {
+      el.style.background = '#F1F5F9'; el.style.color = '#475569';
+      el.textContent = '📡 Hors ligne — code enregistré, saisissez le nom.';
+      document.getElementById('inputNom').focus();
+    }
+  }
+
+  let rechercheEanTimer = null;
+  function rechercherParEan() {
+    clearTimeout(rechercheEanTimer);
+    const ean = document.getElementById('inputEan').value.trim();
+    if (ean.length >= 8) rechercheEanTimer = setTimeout(() => traiterCode(ean), 800);
+  }
+
+  // ── SERVICE WORKER (offline) ─────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  init();
+</script>
+</body>
+</html>
