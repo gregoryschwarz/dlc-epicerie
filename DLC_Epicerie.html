@@ -479,6 +479,7 @@
     <button class="menu-item" onclick="fermerMenu(); exporterDonnees();">📤 Exporter en CSV</button>
     <button class="menu-item" onclick="fermerMenu(); genererRapportPDF();">🧾 Rapport PDF</button>
     <button class="menu-item" onclick="fermerMenu(); ouvrirHistorique();">🕒 Historique des actions</button>
+    <button class="menu-item" id="btnToggleTraites" onclick="fermerMenu(); basculerAffichageTraites();">👁 Afficher les produits traités</button>
     <div class="menu-separateur"></div>
     <button class="menu-item" onclick="fermerMenu(); demanderUrlSheets();">⚙️ Configurer Google Sheets</button>
   </div>
@@ -515,6 +516,7 @@
   let categorieActive = '';
   let dernierSupprime = null; // { item, idx } pour l'annulation
   let toastTimer = null;
+  let afficherTraites = JSON.parse(localStorage.getItem('dlc_epicerie_afficher_traites') || 'false');
 
   const CATEGORIES = {
     'Conserves': '🥫', 'Boissons': '🥤', 'Épicerie sucrée': '🍫',
@@ -539,6 +541,7 @@
       sel.appendChild(opt);
     });
 
+    majBoutonTraites();
     rendreListe();
   }
 
@@ -601,7 +604,7 @@
     document.getElementById('btnTri').textContent = labelsTri[triActif] + (triSens === 1 ? ' ↑' : ' ↓');
 
     const nb = { rouge: 0, orange: 0, jaune: 0, vert: 0 };
-    sorted.forEach(p => nb[p._statut]++);
+    sorted.forEach(p => { if (!p.traite) nb[p._statut]++; });
     document.getElementById('nbRouge').textContent = nb.rouge;
     document.getElementById('nbOrange').textContent = nb.orange;
     document.getElementById('nbJaune').textContent = nb.jaune;
@@ -635,7 +638,8 @@
       const matchFil = filtreActif === 'tous' || p._statut === filtreActif;
       const matchCat = !categorieActive || p.cat === categorieActive;
       const matchRech = !recherche || p.nom.toLowerCase().includes(recherche) || (p.ean && p.ean.includes(recherche));
-      return matchFil && matchCat && matchRech;
+      const matchTraite = afficherTraites || !p.traite;
+      return matchFil && matchCat && matchRech && matchTraite;
     });
 
     ['rouge','orange','jaune','vert'].forEach(s => {
@@ -845,8 +849,20 @@
   }
 
   // ── MENU (⋯) ─────────────────────────────────────────────────────────
-  function ouvrirMenu() { document.getElementById('overlayMenu').classList.add('open'); }
+  function ouvrirMenu() { majBoutonTraites(); document.getElementById('overlayMenu').classList.add('open'); }
   function fermerMenu() { document.getElementById('overlayMenu').classList.remove('open'); }
+
+  // ── AFFICHAGE DES TRAITÉS ────────────────────────────────────────────
+  function majBoutonTraites() {
+    const btn = document.getElementById('btnToggleTraites');
+    if (btn) btn.textContent = afficherTraites ? '🙈 Masquer les produits traités' : '👁 Afficher les produits traités';
+  }
+  function basculerAffichageTraites() {
+    afficherTraites = !afficherTraites;
+    localStorage.setItem('dlc_epicerie_afficher_traites', JSON.stringify(afficherTraites));
+    majBoutonTraites();
+    rendreListe();
+  }
   function fermerSiDehorsMenu(e) {
     if (e.target === document.getElementById('overlayMenu')) fermerMenu();
   }
