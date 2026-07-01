@@ -1,5 +1,5 @@
 // Service worker — DLC Épicerie
-const CACHE = 'dlc-epicerie-v2';
+const CACHE = 'dlc-epicerie-v3';
 const FICHIERS = [
   './DLC_Epicerie.html',
   './manifest.json',
